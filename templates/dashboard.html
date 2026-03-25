@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Birthday Tracker{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+
+{% set av_colors = ['av-blue','av-green','av-amber','av-purple','av-pink'] %}
+
+<!-- Metrics -->
+<div class="metrics">
+  <div class="metric-card">
+    <div class="metric-label">Total Employees</div>
+    <div class="metric-value">{{ total }}</div>
+    <div class="metric-sub">registered in system</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Birthdays Today</div>
+    <div class="metric-value" style="color:#16a34a;">{{ today_bdays|length }}</div>
+    <div class="metric-sub">celebrate them!</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Upcoming (30 days)</div>
+    <div class="metric-value" style="color:#d97706;">{{ upcoming|length }}</div>
+    <div class="metric-sub">birthdays coming up</div>
+  </div>
+</div>
+
+<!-- Today's Birthdays -->
+<div class="section-title">🎉 Today's Birthdays</div>
+<div class="card" style="margin-bottom:24px;">
+  {% if today_bdays %}
+    {% for emp in today_bdays %}
+    <div class="emp-row">
+      <div class="avatar {{ av_colors[loop.index0 % 5] }}">{{ emp.first[0] }}{{ emp.last[0] }}</div>
+      <div class="emp-info">
+        <div class="emp-name">{{ emp.first }} {{ emp.last }} <span class="badge badge-today" style="margin-left:6px;">🎂 Birthday today!</span></div>
+        <div class="emp-sub">{{ emp.department }} &middot; {{ emp.email }}</div>
+      </div>
+      <div class="emp-actions">
+        <a href="/wish/{{ emp.id }}" class="btn btn-success btn-sm">🎉 Send Wish</a>
+        <button class="btn btn-info btn-sm" onclick="notifyTeam({{ emp.id }}, '{{ emp.first }} {{ emp.last }}')">📢 Notify Team</button>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state"><div class="icon">🙂</div>No birthdays today</div>
+  {% endif %}
+</div>
+
+<!-- Upcoming -->
+<div class="section-title">📅 Upcoming Birthdays (Next 30 Days)</div>
+<div class="card" style="margin-bottom:24px;">
+  {% if upcoming %}
+    {% for emp in upcoming %}
+    <div class="emp-row">
+      <div class="avatar {{ av_colors[loop.index0 % 5] }}">{{ emp.first[0] }}{{ emp.last[0] }}</div>
+      <div class="emp-info">
+        <div class="emp-name">
+          {{ emp.first }} {{ emp.last }}
+          {% if emp.days_left <= 7 %}<span class="badge badge-soon" style="margin-left:6px;">In {{ emp.days_left }} days</span>{% endif %}
+        </div>
+        <div class="emp-sub">{{ emp.department }} &middot; 🎂 {{ emp.birthday_display }} &middot; {{ emp.days_left }} days away</div>
+      </div>
+      <div class="emp-actions">
+        <a href="/wish/{{ emp.id }}" class="btn btn-sm">Send Wish</a>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state"><div class="icon">📅</div>No upcoming birthdays in the next 30 days</div>
+  {% endif %}
+</div>
+
+<div id="notify-msg"></div>
+
+<script>
+function notifyTeam(empId, name) {
+  if (!confirm("Send a notification to all team members about " + name + "'s birthday?")) return;
+  fetch("/notify-team", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({emp_id: empId})
+  })
+  .then(r => r.json())
+  .then(data => {
+    const el = document.getElementById("notify-msg");
+    el.innerHTML = data.success
+      ? '<div class="alert alert-success">Team notified! ' + data.sent + ' email(s) sent.</div>'
+      : '<div class="alert alert-danger">Error: ' + data.error + '</div>';
+    setTimeout(() => el.innerHTML = "", 4000);
+  });
+}
+</script>
+{% endblock %}

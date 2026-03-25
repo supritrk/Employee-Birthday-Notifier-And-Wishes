@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Employees — Birthday Tracker{% endblock %}
+{% block page_title %}All Employees{% endblock %}
+{% block content %}
+
+{% set av_colors = ['av-blue','av-green','av-amber','av-purple','av-pink'] %}
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+  <p style="color:#6b7280;font-size:13px;">{{ employees|length }} employee(s) registered</p>
+  {% if session.get('role') == 'admin' %}
+  <a href="{{ url_for('add_employee') }}" class="btn btn-primary">+ Add Employee</a>
+  {% endif %}
+</div>
+
+{% if session.get('role') != 'admin' %}
+<div class="note-box" style="margin-bottom:18px;">
+  👋 You can <strong>send birthday wishes</strong> directly to teammates or <strong>notify the whole team</strong> about someone's birthday.
+</div>
+{% endif %}
+
+<div class="card">
+  {% if employees %}
+    {% for emp in employees %}
+    <div class="emp-row">
+      <div class="avatar {{ av_colors[loop.index0 % 5] }}">{{ emp.first[0] }}{{ emp.last[0] }}</div>
+      <div class="emp-info">
+        <div class="emp-name">
+          {{ emp.first }} {{ emp.last }}
+          {% if emp.days_left == 0 %}
+            <span class="badge badge-today" style="margin-left:6px;">🎂 Today!</span>
+          {% elif emp.days_left <= 7 %}
+            <span class="badge badge-soon" style="margin-left:6px;">In {{ emp.days_left }}d</span>
+          {% endif %}
+        </div>
+        <div class="emp-sub">
+          {{ emp.department }} &middot; {{ emp.email }} &middot; 🎂 {{ emp.birthday_display }}
+          {% if emp.days_left == 0 %} — <strong style="color:#16a34a;">Birthday today!</strong>
+          {% elif emp.days_left > 0 %} — {{ emp.days_left }} days away
+          {% endif %}
+        </div>
+      </div>
+      <div class="emp-actions">
+        <a href="/wish/{{ emp.id }}" class="btn btn-success btn-sm">🎉 Send Wish</a>
+        <button class="btn btn-info btn-sm" onclick="notifyTeam({{ emp.id }}, '{{ emp.first }} {{ emp.last }}')">📢 Notify Team</button>
+        {% if session.get('role') == 'admin' %}
+        <a href="/delete-employee/{{ emp.id }}" class="btn btn-danger btn-sm"
+           onclick="return confirm('Remove {{ emp.first }} {{ emp.last }} from the system?')">Remove</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">
+      <div class="icon">👥</div>
+      No employees yet.
+      {% if session.get('role') == 'admin' %}
+      <br><a href="{{ url_for('add_employee') }}" style="color:#4f46e5;font-size:13px;">Add your first employee →</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
+<div id="notify-msg" style="margin-top:14px;"></div>
+
+<script>
+function notifyTeam(empId, name) {
+  if (!confirm("Send a birthday notification email to the whole team about " + name + "?")) return;
+  fetch("/notify-team", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({emp_id: empId})
+  })
+  .then(r => r.json())
+  .then(data => {
+    const el = document.getElementById("notify-msg");
+    el.innerHTML = data.success
+      ? '<div class="alert alert-success">Team notified! ' + data.sent + ' email(s) sent successfully.</div>'
+      : '<div class="alert alert-danger">Error: ' + data.error + '</div>';
+    setTimeout(() => el.innerHTML = "", 5000);
+  });
+}
+</script>
+{% endblock %}

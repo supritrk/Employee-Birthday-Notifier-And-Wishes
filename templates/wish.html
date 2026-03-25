@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Send Birthday Wish{% endblock %}
+{% block page_title %}Send Birthday Wish{% endblock %}
+{% block content %}
+<div style="max-width:600px;">
+
+  <!-- Employee info strip -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-body" style="display:flex;align-items:center;gap:14px;padding:14px 18px;">
+      <div class="avatar av-green" style="width:46px;height:46px;font-size:15px;font-weight:700;">
+        {{ emp.first[0] }}{{ emp.last[0] }}
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:15px;font-weight:700;">{{ emp.first }} {{ emp.last }}</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:2px;">{{ emp.department }} &middot; {{ emp.email }}</div>
+      </div>
+      <span class="badge badge-today">🎂 Birthday!</span>
+    </div>
+  </div>
+
+  <!-- Message form -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header"><h3>Your Birthday Message</h3></div>
+    <div class="card-body">
+      <form method="POST" id="wish-form">
+        <div class="form-group">
+          <label>Message <span class="hint">(will be sent to {{ emp.email }})</span></label>
+          <textarea name="message" id="wish-msg" rows="7" required style="resize:vertical;">{{ default_msg }}</textarea>
+        </div>
+        <div class="note-box">
+          📧 This email will be sent from your configured sender address to <strong>{{ emp.email }}</strong>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">🎉 Send Birthday Wish</button>
+          <a href="{{ url_for('dashboard') }}" class="btn">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Birthday Card Preview (below message) -->
+  <div style="margin-bottom:8px;">
+    <p style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;">Card Preview</p>
+  </div>
+
+  <style>
+    @keyframes float1 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+    @keyframes float2 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+    @keyframes float3 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-9px)} }
+  </style>
+
+  <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 50%,#f093fb 100%);
+              border-radius:16px;padding:2px;box-shadow:0 8px 32px rgba(102,126,234,0.25);">
+    <div style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%);
+                border-radius:14px;padding:36px 28px;text-align:center;position:relative;overflow:hidden;">
+
+      <!-- Decorative bg circles -->
+      <div style="position:absolute;top:-30px;left:-30px;width:120px;height:120px;background:rgba(255,255,255,0.04);border-radius:50%;"></div>
+      <div style="position:absolute;bottom:-40px;right:-20px;width:160px;height:160px;background:rgba(255,255,255,0.03);border-radius:50%;"></div>
+      <div style="position:absolute;top:20px;right:30px;width:60px;height:60px;background:rgba(240,147,251,0.1);border-radius:50%;"></div>
+      <div style="position:absolute;top:18px;left:24px;font-size:10px;animation:float3 4s ease-in-out infinite;">🎊</div>
+      <div style="position:absolute;top:30px;right:22px;font-size:10px;animation:float1 3.5s ease-in-out infinite .5s;">🎊</div>
+      <div style="position:absolute;bottom:22px;left:40px;font-size:10px;animation:float2 4.2s ease-in-out infinite .8s;">✨</div>
+
+      <!-- Balloons row -->
+      <div style="display:flex;justify-content:center;gap:8px;margin-bottom:16px;font-size:22px;line-height:1;">
+        <span style="animation:float1 3s ease-in-out infinite;display:inline-block;">🎈</span>
+        <span style="animation:float2 3.5s ease-in-out infinite;display:inline-block;">🎂</span>
+        <span style="animation:float1 2.8s ease-in-out infinite .4s;display:inline-block;">🎈</span>
+        <span style="animation:float3 3.2s ease-in-out infinite .2s;display:inline-block;">✨</span>
+        <span style="animation:float2 3.8s ease-in-out infinite .6s;display:inline-block;">🎁</span>
+        <span style="animation:float1 3s ease-in-out infinite .3s;display:inline-block;">🎈</span>
+      </div>
+
+      <!-- Name & dept -->
+      <div style="font-size:12px;letter-spacing:0.18em;color:rgba(240,147,251,0.85);font-weight:700;text-transform:uppercase;margin-bottom:10px;">
+        Happy Birthday
+      </div>
+      <div style="font-size:32px;font-weight:800;color:#ffffff;line-height:1.1;margin-bottom:6px;text-shadow:0 2px 20px rgba(240,147,251,0.4);">
+        {{ emp.first }} {{ emp.last }}
+      </div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:20px;">
+        {{ emp.department }}
+      </div>
+
+      <!-- Divider -->
+      <div style="display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:20px;">
+        <div style="flex:1;height:1px;background:linear-gradient(to right,transparent,rgba(255,255,255,0.15));"></div>
+        <span style="font-size:14px;">🌟</span><span style="font-size:14px;">🌟</span><span style="font-size:14px;">🌟</span>
+        <div style="flex:1;height:1px;background:linear-gradient(to left,transparent,rgba(255,255,255,0.15));"></div>
+      </div>
+
+      <!-- Live message preview from textarea -->
+      <div id="card-message" style="font-size:13px;color:rgba(255,255,255,0.75);
+           max-width:380px;margin:0 auto;line-height:1.7;white-space:pre-wrap;font-style:italic;">{{ default_msg }}</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const textarea = document.getElementById('wish-msg');
+  const cardMsg  = document.getElementById('card-message');
+  textarea.addEventListener('input', function() {
+    cardMsg.textContent = this.value;
+  });
+</script>
+
+{% endblock %}
