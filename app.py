@@ -386,10 +386,28 @@ def settings():
     }
     return render_template("settings.html", config=config)
 
+# ── Health Check ──────────────────────────────────────────────────────────────
+
+@app.route("/health")
+def health():
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT 1")
+        cur.close()
+        conn.close()
+        return jsonify({"status": "ok", "database": "connected"})
+    except Exception as e:
+        return jsonify({"status": "error", "database": str(e)}), 500
+
 # ── Start ─────────────────────────────────────────────────────────────────────
 
-with app.app_context():
-    init_db()
+try:
+    with app.app_context():
+        init_db()
+except Exception as e:
+    print(f"⚠️  Database initialization failed: {e}")
+    print("   Make sure DATABASE_URL environment variable is set.")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
